@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 app = Flask(__name__)
 
 from sqlalchemy import create_engine
@@ -13,43 +13,83 @@ DBSession = scoped_session(sessionmaker(bind=engine))
 
 
 @app.route('/')
+@app.route('/catalog/')
 def DefaultLanding():
     session = DBSession()
     categories = session.query(Category)
-    # output = render_template('restaurants.html', restaurants=restaurants)
-    output = ""
     for cat in categories:
-        output += cat.name
-        output += "<br/>"
+        items = session.query(Item).filter_by(category_id = cat.id)
+        cat.items = items
+    output = render_template('home.html', categories=categories)
     remove_session()
     return output
 
-@app.route('/restaurants/<int:restaurant_id>/')
-def restaurants(restaurant_id):
+@app.route('/catalog/<string:category_name>/')
+def catalog(category_name):
     session = DBSession()
-    restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
-    items = session.query(MenuItem).filter_by(restaurant_id = restaurant.id)
-    output = render_template('menu.html', restaurant=restaurant, items=items)
+    category = session.query(Category).filter_by(name=category_name).one()
+    items = session.query(Item).filter_by(category_id = category.id, is_deleted=False)
+    output = render_template('category.html', category=category, items=items)
     remove_session()
     return output
 
 # Task 1: Create route for newMenuItem function here
 
-@app.route('/restaurants/<int:restaurant_id>/new/')
-def newMenuItem(restaurant_id):
-    return "page to create a new menu item. Task 1 complete!"
-
+@app.route('/catalog/<string:category_name>/add/', methods=['GET', 'POST'])
+def addItem(category_name):
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        image = ''
+        session = DBSession()
+        category = session.query(Category).filter_by(name=category_name).one()
+        item = Item(title=title, description=description, image=image, category_id=category.id)
+        session.add(item)
+        session.commit()
+        remove_session()
+        return redirect(url_for('catalog',category_name=category_name))
+    else:
+        session = DBSession()
+        category = session.query(Category).filter_by(name=category_name).one()
+        output = render_template('add.html', category=category )
+        remove_session()
+    return output
 # Task 2: Create route for editMenuItem function here
 
-@app.route('/restaurants/<int:restaurant_id>/<int:menu_id>/edit/')
-def editMenuItem(restaurant_id, menu_id):
-    return "page to edit a menu item. Task 2 complete!"
+@app.route('/catalog/<string:category_name>/<int:item_id>/edit/', methods=['GET', 'POST'])
+def editItem(category_name, item_id):
+    session = DBSession()
+    category = session.query(Category).filter_by(name=category_name).one()
+    item = session.query(Item).filter_by(id=item_id, category_id=category.id).one()
+    if request.method == 'POST':
+        item.title = request.form['title']
+        item.description = request.form['description']
+        session.add(item)
+        session.commit()
+        remove_session()
+        return redirect(url_for('catalog', category_name=category_name))
+    else:
+        output = render_template('edit.html', category=category, item=item )
+        remove_session()
+    return output
 
 # Task 3: Create a route for deleteMenuItem function here
 
-@app.route('/restaurants/<int:restaurant_id>/<int:menu_id>/delete/')
-def deleteMenuItem(restaurant_id, menu_id):
-    return "page to delete a menu item. Task 3 complete!"
+@app.route('/catalog/<string:category_name>/<int:item_id>/delete/', methods=['GET', 'POST'])
+def deleteItem(category_name, item_id):
+    session = DBSession()
+    category = session.query(Category).filter_by(name=category_name).one()
+    item = session.query(Item).filter_by(id=item_id).one()
+    if request.method == 'POST':
+        item.is_deleted=True
+        session.add(item)
+        session.commit()
+        remove_session()
+        return redirect(url_for('catalog', category_name=category_name))
+    else:
+        output = render_template('delete.html', category=category, item=item)
+        remove_session()
+    return output
 
 def remove_session():
     DBSession.remove()
