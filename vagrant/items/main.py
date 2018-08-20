@@ -24,6 +24,7 @@ def DefaultLanding():
     remove_session()
     return output
 
+
 @app.route('/catalog/<string:category_name>/')
 def catalog(category_name):
     session = DBSession()
@@ -32,8 +33,6 @@ def catalog(category_name):
     output = render_template('category.html', category=category, items=items)
     remove_session()
     return output
-
-# Task 1: Create route for newMenuItem function here
 
 @app.route('/catalog/<string:category_name>/add/', methods=['GET', 'POST'])
 def addItem(category_name):
@@ -90,6 +89,46 @@ def deleteItem(category_name, item_id):
         output = render_template('delete.html', category=category, item=item)
         remove_session()
     return output
+
+
+@app.route('/json/catalog/')
+def JSONDefault():
+    session = DBSession()
+    categories = session.query(Category)
+    for cat in categories:
+        items = session.query(Item).filter_by(category_id = cat.id)
+    remove_session()
+    output = jsonify(Categories=[cat.serialize for cat in categories])
+    return output
+
+@app.route('/json/catalog/all/')
+def JSONDefaultAll():
+    session = DBSession()
+    categories = session.query(Category)
+    all_data = []
+    for cat in categories:
+        items=session.query(Item).filter_by(category_id = cat.id)
+        cat.items.extend(items)
+    remove_session()
+    output = jsonify(Categories=[cat.serialize for cat in categories])
+    return output
+
+@app.route('/json/catalog/<int:category_id>/')
+def JSONCatalog(category_id):
+    session = DBSession()
+    items = session.query(Item).filter_by(category_id=category_id)
+    remove_session()
+    output = jsonify(Items=[item.serialize for item in items])
+    return output
+
+@app.route('/json/catalog/<int:category_id>/<int:item_id>/')
+def JSONItem(category_id, item_id):
+    session = DBSession()
+    item = session.query(Item).filter_by(id=item_id).one()
+    remove_session()
+    output = jsonify(Item=item.serialize)
+    return output
+
 
 def remove_session():
     DBSession.remove()
