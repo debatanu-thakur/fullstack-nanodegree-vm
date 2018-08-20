@@ -1,0 +1,20 @@
+<html>
+<body>
+<h1>{{category.name}}</h1>
+<h3>{{item.name}}</h3>
+<form action= "{{url_for('editItem', category_name = category.name, item_id=item.id)}}" method = 'POST'>
+
+<p>Title:</p>
+<input type = 'text' size='30' name = 'title' value = '{{item.title}}'>
+
+<p>Description:</p>
+<textarea maxlength='200' name='description'>
+{{item.description}}
+</textarea>
+<p>Image WIP</p>
+
+<input type='submit' value='Update'>
+<a href= '{{url_for('catalog', category_name= category.name)}}'>Cancel</a>
+</form>
+</body>
+</html>

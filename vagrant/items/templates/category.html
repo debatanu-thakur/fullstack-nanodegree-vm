@@ -1,0 +1,23 @@
+
+<html>
+
+    <body>
+
+    <h1>{{category.name}}</h1>
+    <p> <a href="{{url_for('addItem', category_name = category.name) }}">Add New Item</a></p>
+
+    {% for i in items %}
+
+    <div>
+        <p>{{i.title}}</p>
+        <p>{{i.description}}</p>
+        <!-- <p> {{i.image}} </p> -->
+        <a href="{{url_for('editItem', category_name = category.name, item_id = i.id) }}">Edit</a>
+        <br/>
+        <a href ="{{url_for('deleteItem', category_name = category.name, item_id = i.id ) }}">Delete</a>
+    </div>
+
+    {% endfor %}
+    </body>
+        
+</html>
