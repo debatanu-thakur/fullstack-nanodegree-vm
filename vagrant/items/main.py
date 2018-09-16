@@ -3,7 +3,7 @@ app = Flask(__name__)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from db_setup import Base, Category, Item
+from db_setup import Base, Category, Item, User
 
 engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
